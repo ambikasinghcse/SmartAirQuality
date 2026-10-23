@@ -1,0 +1,340 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Smart Air Quality Monitor</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f0f5f9;
+            color: #263238;
+        }
+
+        header {
+            background: #123b52;
+            color: white;
+            text-align: center;
+            padding: 25px 15px;
+        }
+
+        header h1 {
+            margin: 0 0 10px;
+        }
+
+        main {
+            max-width: 1100px;
+            margin: 25px auto;
+            padding: 0 16px;
+        }
+
+        section {
+            background: white;
+            padding: 22px;
+            margin-bottom: 24px;
+            border-radius: 12px;
+            box-shadow: 0 3px 12px #00000010;
+        }
+
+        h2 {
+            color: #123b52;
+            margin-top: 0;
+        }
+
+        form {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+            gap: 15px;
+        }
+
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 7px;
+        }
+
+        input {
+            width: 100%;
+            padding: 11px;
+            border: 1px solid #bdcbd3;
+            border-radius: 6px;
+            font-size: 16px;
+        }
+
+        button {
+            background: #138a82;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 12px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #0d6e68;
+        }
+
+        .result-box {
+            background: #e6f6f3;
+            border-left: 5px solid #138a82;
+            padding: 18px;
+            margin-top: 20px;
+            border-radius: 6px;
+        }
+
+        .result {
+            font-size: 32px;
+            font-weight: bold;
+            color: #08786f;
+        }
+
+        .note {
+            color: #586a73;
+            font-size: 14px;
+        }
+
+        .node-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 18px;
+        }
+
+        .node-card {
+            background: #f7fbfd;
+            border: 1px solid #dce8ed;
+            border-top: 4px solid #138a82;
+            padding: 18px;
+            border-radius: 9px;
+        }
+
+        .node-card h3 {
+            margin-top: 0;
+            color: #123b52;
+        }
+
+        .reading {
+            font-size: 17px;
+            margin: 12px 0;
+        }
+
+        .source {
+            color: #637780;
+            font-size: 13px;
+        }
+
+        .table-wrap {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 12px;
+        }
+
+        th, td {
+            padding: 12px;
+            border-bottom: 1px solid #dce5e9;
+            text-align: center;
+        }
+
+        th {
+            background: #123b52;
+            color: white;
+        }
+
+        tr:nth-child(even) {
+            background: #f4f8fa;
+        }
+
+        .chart-container {
+            position: relative;
+            width: 100%;
+            height: 350px;
+        }
+
+        footer {
+            text-align: center;
+            padding: 20px;
+            color: #637780;
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <h1>Smart Air Quality Monitor</h1>
+    <p>IoT Node Monitoring and AQI Prediction</p>
+</header>
+
+<main>
+
+    <section>
+        <h2>Predict Air Quality Index</h2>
+
+        <form method="POST" action="/">
+            <div>
+                <label for="pm25">PM2.5</label>
+                <input id="pm25" type="number" name="pm25"
+                       min="0" step="any" required>
+            </div>
+
+            <div>
+                <label for="pm10">PM10</label>
+                <input id="pm10" type="number" name="pm10"
+                       min="0" step="any" required>
+            </div>
+
+            <div>
+                <label for="no2">NO2</label>
+                <input id="no2" type="number" name="no2"
+                       min="0" step="any" required>
+            </div>
+
+            <div>
+                <label for="co">CO</label>
+                <input id="co" type="number" name="co"
+                       min="0" step="any" required>
+            </div>
+
+            <button type="submit">Predict AQI</button>
+        </form>
+
+        {% if prediction is not none %}
+        <div class="result-box">
+            <h3>Estimated AQI</h3>
+            <div class="result">{{ prediction }}</div>
+            <p><strong>Estimated Air Quality:</strong> {{ alert }}</p>
+            <p class="note">
+                Model estimate only, not an official AQI reading.
+            </p>
+        </div>
+        {% endif %}
+    </section>
+
+    <section>
+        <h2>Simulated IoT Node Readings</h2>
+
+        <div class="node-grid">
+            {% for node in nodes %}
+            <div class="node-card">
+                <h3>{{ node["Node"] }}</h3>
+                <p class="reading">
+                    <strong>AQI:</strong> {{ node["AQI"] }}
+                </p>
+                <p class="reading">
+                    <strong>PM2.5:</strong> {{ node["PM2.5"] }}
+                </p>
+                <p class="reading">
+                    <strong>PM10:</strong> {{ node["PM10"] }}
+                </p>
+                <p class="source">Source: Simulated Data</p>
+            </div>
+            {% endfor %}
+        </div>
+
+        <p class="note">
+            These readings are simulated from historical dataset rows.
+            They are not live sensor measurements.
+        </p>
+    </section>
+
+    <section>
+        <h2>Node Readings Table</h2>
+
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Node</th>
+                        <th>City</th>
+                        <th>PM2.5</th>
+                        <th>PM10</th>
+                        <th>AQI</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for node in nodes %}
+                    <tr>
+                        <td>{{ node["Node"] }}</td>
+                        <td>{{ node["City"] }}</td>
+                        <td>{{ node["PM2.5"] }}</td>
+                        <td>{{ node["PM10"] }}</td>
+                        <td>{{ node["AQI"] }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section>
+        <h2>PM2.5 Readings Graph</h2>
+
+        <div class="chart-container">
+            <canvas id="pollutionChart"></canvas>
+        </div>
+
+        <p class="note">
+            Sample PM2.5 readings for the simulated IoT nodes.
+        </p>
+    </section>
+
+</main>
+
+<footer>
+    Smart Air Quality Monitoring and Prediction Project
+</footer>
+
+<script>
+    const labels = {{ graph_labels | tojson }};
+    const values = {{ graph_values | tojson }};
+
+    const canvas = document.getElementById("pollutionChart");
+
+    if (canvas && typeof Chart !== "undefined") {
+        new Chart(canvas, {
+            type: "bar",
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: "PM2.5",
+                    data: values,
+                    backgroundColor: "#22a6a1",
+                    borderColor: "#137c77",
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: "PM2.5 value"
+                        }
+                    }
+                }
+            }
+        });
+    } else {
+        console.error("Chart.js did not load.");
+    }
+</script>
+
+</body>
+</html>
